@@ -1,14 +1,20 @@
 
 from ETL import ETL
 from ETL import Load
+from datetime import datetime
+
+
+now = datetime. now()
+current_time = now.strftime("%H:%M:%S")
+print("Current Time =", current_time)
 
 rootFolder = 'M:\\APP ZONE\\Direct Labour Model Sandbox\\p11\\MOPS\Month End Process\\Source'
-fileName_TYHours = 'Z1_ZHOUYAN_DLM_9502_Hours_Driver_TY_TEST.csv'
-fileName_TYHours_1 = 'Z1_ZHOUYAN_DLM_9502_Hours_Driver_TY_1_TEST.csv'
-fileName_LYHours = 'Z1_ZHOUYAN_DLM_9502_Hours_Driver_LY_TEST.csv'
-fileName_LYHours_1 = 'Z1_ZHOUYAN_DLM_9502_Hours_Driver_LY_TEST_1.csv'
-fileName_Dollars = 'Z1_ZHOUYAN_DLM_9000_Cost_Driver_TEST.csv'
-fileName_Dollars_1 = 'Z1_ZHOUYAN_DLM_9000_Cost_Driver_TEST_1.csv'
+fileName_TYHours = 'Z1_ZHOUYAN_DLM_9502_Hours_Driver_TY.csv'
+fileName_TYHours_1 = 'Z1_ZHOUYAN_DLM_9502_Hours_Driver_TY_1.csv'
+fileName_LYHours = 'Z1_ZHOUYAN_DLM_9502_Hours_Driver_LY.csv'
+fileName_LYHours_1 = 'Z1_ZHOUYAN_DLM_9502_Hours_Driver_LY_1.csv'
+fileName_Dollars = 'Z1_ZHOUYAN_DLM_9000_Cost_Driver.csv'
+fileName_Dollars_1 = 'Z1_ZHOUYAN_DLM_9000_Cost_Driver_1.csv'
 fileName_T110 = 'Others\\T110 - YOY Adj.xlsb'
 
 connString = 'Driver={SQL Server Native Client 11.0};Server=CPC-5CG8253WS6\\SQLEXPRESS;Database=4-DLM_Input_2;trusted_connection=yes'
@@ -73,3 +79,7 @@ vLoad.execSP_param('EXEC [4-DLM_Input_2].[dbo].[spT110_Hours] ?', [vLoad.reportI
 print('T110 Hours Inserted')
 
 print('complete')
+
+now2 = datetime. now()
+current_time2 = now2.strftime("%H:%M:%S")
+print("Current Time =", current_time2)

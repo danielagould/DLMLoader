@@ -107,15 +107,15 @@ class ETL:
 
         def Mod_BWHours_Period(self):
             ETL.val_TYHours['Actual time'] = (ETL.val_TYHours['Actual time'].replace('[)]', '', regex=True).replace(
-                '[(]', '-', regex=True).astype(float))
+                '[(]', '-', regex=True).replace('[,]', '', regex=True).astype(float))
             ETL.val_TYHours_1['Actual time'] = (ETL.val_TYHours_1['Actual time'].replace('[)]', '', regex=True).replace(
-                '[(]', '-', regex=True).astype(float))
+                '[(]', '-', regex=True).replace('[,]', '', regex=True).astype(float))
 
         def Mod_BWHours_Weekly(self):
             ETL.val_LYHours['Actual time'] = (ETL.val_LYHours['Actual time'].replace('[)]', '', regex=True).replace(
-                '[(]', '-', regex=True).astype(float))
+                '[(]', '-', regex=True).replace('[,]', '', regex=True).astype(float))
             ETL.val_LYHours_1['Actual time'] = (ETL.val_LYHours_1['Actual time'].replace('[)]', '', regex=True).replace(
-                '[(]', '-', regex=True).astype(float))
+                '[(]', '-', regex=True).replace('[,]', '', regex=True).astype(float))
 
         def Mod_Dollars(self):
             ETL.val_Dollars['YTD Actual'] = (ETL.val_Dollars['YTD Actual'].replace('[)]', '', regex=True).replace(
