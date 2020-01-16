@@ -7,13 +7,18 @@ from FileDictionaries import startRow_dictionary
 from FileDictionaries import delimiter_dictionary
 from FileDictionaries import T110sheetDictionary
 from FileDictionaries import XLsheetDictionary
+from SQLDictionaries import spInsert_dictionary
 from FileEnums import fileType
 import pandas as pd
 import sqlalchemy
 import pyodbc
 import urllib.parse
+import json
 
 class ETL:
+
+    reportYear = 0
+    reportPeriod = 0
 
     rootFolder = ''
     fileName_TYHours = ''
@@ -46,7 +51,8 @@ class ETL:
     reportID = 0
 
     def __init__(self,rootFolder,fileName_TYHours,fileName_TYHours_1,fileName_LYHours,fileName_LYHours_1,
-                     fileName_Dollars,fileName_Dollars_1,fileName_T110,fileName_Hier,fileName_Plant,getHier,getPlant):
+                fileName_Dollars,fileName_Dollars_1,fileName_T110,fileName_Hier,fileName_Plant,getHier,getPlant,
+                reportYear,reportPeriod,connString):
         self.rootFolder = rootFolder
         self.fileName_TYHours = fileName_TYHours
         self.fileName_TYHours_1 = fileName_TYHours_1
@@ -59,66 +65,55 @@ class ETL:
         self.fileName_Plant = fileName_Plant
         self.getHier = getHier
         self.getPlant = getPlant
+        self.reportYear = reportYear
+        self.reportPeriod = reportPeriod
+        self.connString = connString
 
     def extract_all(self):
 
         self.rootFolder = self.extract_addSlash(self.rootFolder)
+        self.val_TYHours = self.extract_BW(self.fileName_TYHours, fileType.BWHours_Period)
+        print('TY Hours Extracted')
+        self.val_TYHours_1 = self.extract_BW(self.fileName_TYHours_1, fileType.BWHours_Period)
+        print('TY_1 Hours Extracted')
+        self.val_LYHours = self.extract_BW(self.fileName_LYHours, fileType.BWHours_Weekly)
+        print('LY Hours Extracted')
+        self.val_LYHours_1 = self.extract_BW(self.fileName_LYHours_1, fileType.BWHours_Weekly)
+        print('LY_1 Hours Extracted')
+        self.val_Dollars = self.extract_BW(self.fileName_Dollars, fileType.BWDollars)
+        print('Dollars Extracted')
+        self.val_Dollars_1 = self.extract_BW(self.fileName_Dollars_1, fileType.BWDollars)
+        print('Dollars_1 Extracted')
+        self.extact_T110()
+        print('T110 Extracted')
+        if self.getHier:
+            self.extract_Hier()
+            print('Hier Extracted')
+        if self.getPlant:
+            self.extract_Plant()
+            print('Plant Extracted')
 
-        FileReader = I_csv.read(self.rootFolder + self.fileName_TYHours,
-                                   delimiter_dictionary[fileType.BWHours_Period],
-                                   startRow_dictionary[fileType.BWHours_Period],False)
-        self.val_TYHours = FileReader.values
-        print('TY Hours 0 Read')
+    def extract_BW(self, fileName, fileType):
+        FileReader = I_csv.read(self.rootFolder + fileName,
+                                delimiter_dictionary[fileType],
+                                startRow_dictionary[fileType], False)
+        return FileReader.values
 
-        FileReader = I_csv.read(self.rootFolder + self.fileName_TYHours_1,
-                                delimiter_dictionary[fileType.BWHours_Period],
-                                startRow_dictionary[fileType.BWHours_Period], False)
-        self.val_TYHours_1 = FileReader.values
-        print('TY Hours 1 Read')
-
-        FileReader = I_csv.read(self.rootFolder + self.fileName_LYHours,
-                                delimiter_dictionary[fileType.BWHours_Weekly],
-                                startRow_dictionary[fileType.BWHours_Weekly], False)
-        self.val_LYHours = FileReader.values
-        print('LY Hours 0 Read')
-
-        FileReader = I_csv.read(self.rootFolder + self.fileName_LYHours_1,
-                                delimiter_dictionary[fileType.BWHours_Weekly],
-                                startRow_dictionary[fileType.BWHours_Weekly], False)
-        self.val_LYHours_1 = FileReader.values
-        print('LY Hours 1 Read')
-
-        FileReader = I_csv.read(self.rootFolder + self.fileName_Dollars,
-                                delimiter_dictionary[fileType.BWDollars],
-                                startRow_dictionary[fileType.BWDollars], False)
-        self.val_Dollars = FileReader.values
-        print('Dollars 0 Read')
-
-        FileReader = I_csv.read(self.rootFolder + self.fileName_Dollars_1,
-                                delimiter_dictionary[fileType.BWDollars],
-                                startRow_dictionary[fileType.BWDollars], False)
-        self.val_Dollars_1 = FileReader.values
-        print('Dollars 1 Read')
-
+    def extact_T110(self):
         FileReader = I_xl.read(self.rootFolder + self.fileName_T110)
         FileReader.readData(T110sheetDictionary['Hours'])
         self.val_T110_Hours = FileReader.values
-        print('T110 Hours Read')
-
         FileReader.readData(T110sheetDictionary['Dollars'])
         self.val_T110_Dollars = FileReader.values
-        print('T110 Dollars Read')
 
-        if self.getHier:
-            FileReader = I_xl.read(self.rootFolder + self.fileName_Hier)
-            FileReader.readData(XLsheetDictionary['Hier'])
-            self.val_Hier = FileReader.values
-            print('Hierarchy Read')
+    def extract_Hier(self):
+        FileReader = I_xl.read(self.rootFolder + self.fileName_Hier)
+        FileReader.readData(XLsheetDictionary[fileType.Hierarchy])
+        self.val_Hier = FileReader.values
 
-        if self.getPlant:
-            FileReader = I_csv.read(self.rootFolder + self.fileName_Plant, '', 0, True)
-            self.val_Plant = FileReader.values
-            print('Plant Read')
+    def extract_Plant(self):
+        FileReader = I_csv.read(self.rootFolder + self.fileName_Plant, '', 0, True)
+        self.val_Plant = FileReader.values
 
     def extract_addSlash(self, locationString):
         if locationString[-1:] == "\\":
@@ -137,6 +132,8 @@ class ETL:
         print('BW Hours Transformed')
         self.transform_Dollars()
         print('Dollars Transformed')
+        if self.getHier:
+            self.transform_Hier()
         print('Transformations Complete')
 
     def transform_BWHours_Period(self):
@@ -184,8 +181,8 @@ class ETL:
         self.val_T110_Dollars['PlantINT'] = 0
         for index, row in self.val_T110_Dollars.iterrows():
             if str(row['Plant']).lower() == 'plant':
-                self.val_T110_Dollars.set_value(index,'PlantINT', 1)
-
+                # self.val_T110_Dollars.set_value(index,'PlantINT', 1)
+                self.val_T110_Dollars.at[index, 'PlantINT'] = 1
 
     def transform_T110_Hours(self):
         self.val_T110_Hours.columns = self.val_T110_Hours.ix[1,:]
@@ -193,7 +190,8 @@ class ETL:
         self.val_T110_Hours['PlantINT'] = 0
         for index, row in self.val_T110_Hours.iterrows():
             if str(row['Plant']).lower() == 'plant':
-                self.val_T110_Hours.set_value(index, 'PlantINT', 1)
+                # self.val_T110_Hours.set_value(index, 'PlantINT', 1)
+                self.val_T110_Hours.at[index,'PlantINT'] = 1
         self.val_T110_Hours['P1'] = self.val_T110_Hours.fillna(0)['Wk0'] + \
                                    self.val_T110_Hours.fillna(0)['Wk1'] + \
                                    self.val_T110_Hours.fillna(0)['Wk2'] + \
@@ -255,15 +253,74 @@ class ETL:
                                 'Wk35','Wk36','Wk37','Wk38','Wk39','Wk40','Wk41','Wk42','Wk43','Wk44','Wk45',
                                 'Wk46','Wk47','Wk48','Wk49','Wk50','Wk51','Wk52','Wk53'],axis=1,inplace=True)
 
+    def transform_Hier(self):
+        for index, row in self.val_Hier.iterrows():
+            if 'shn' in str(row[0]).lower():
+                newVal = str(self.val_Hier.iat[index, 0])[:9]
+                self.val_Hier.iat[index, 0] = newVal
+            for i in range(3, len(row)):
+                if 'shn' in str(row[i]).lower():
+                    newVal = str(self.val_Hier.iat[index, i])[:9]
+                    self.val_Hier.iat[index, i] = newVal
 
-    def load_connect(self,connString):
-        self.connString = connString
-        params = urllib.parse.quote_plus(connString)
+
+    def load_all(self):
+        self.load_connect()
+        print('Connected to Database')
+        self.load_getReportID()
+        print('ReportID = ' + str(self.reportID))
+        self.load_BWHours_Period()
+        self.load_BWHours_Weekly()
+        self.load_BWDollars()
+        self.load_T110()
+        if self.getHier:
+            self.load_Hier()
+
+
+    def load_connect(self):
+        params = urllib.parse.quote_plus(self.connString)
         self.sqlalchemy_engine = sqlalchemy.create_engine("mssql+pyodbc:///?odbc_connect=%s" % params)
 
-    def load_getReportID(self, ReportYear, ReportPeriod):
-        proxy = self.load_execSP_param_output('EXEC [4-DLM_Input_2].[dbo].[CreateReportID] ?, ?', [ReportYear, ReportPeriod])
+    def load_getReportID(self):
+        proxy = self.load_execSP_param_output('EXEC [dbo].[CreateReportID] ?, ?', [self.reportYear, self.reportPeriod])
         self.reportID = proxy[0][0]
+
+    def load_BWHours_Period(self):
+        self.val_TYHours.to_sql(name='STAGING', con=self.sqlalchemy_engine, if_exists='replace', index=False)
+        self.load_execSP_param(spInsert_dictionary[fileType.BWHours_Period], [self.reportID])
+        print('TY (0) Hours Inserted')
+        self.val_TYHours_1.to_sql(name='STAGING', con=self.sqlalchemy_engine, if_exists='replace', index=False)
+        self.load_execSP_param(spInsert_dictionary[fileType.BWHours_Period], [self.reportID])
+        print('TY (1) Hours Inserted')
+
+    def load_BWHours_Weekly(self):
+        self.val_LYHours.to_sql(name='STAGING', con=self.sqlalchemy_engine, if_exists='replace', index=False)
+        self.load_execSP_param(spInsert_dictionary[fileType.BWHours_Weekly], [self.reportID])
+        print('LY (0) Hours Inserted')
+        self.val_LYHours_1.to_sql(name='STAGING', con=self.sqlalchemy_engine, if_exists='replace', index=False)
+        self.load_execSP_param(spInsert_dictionary[fileType.BWHours_Weekly], [self.reportID])
+        print('LY (1) Hours Inserted')
+
+    def load_BWDollars(self):
+        self.val_Dollars.to_sql(name='STAGING', con=self.sqlalchemy_engine, if_exists='replace', index=False)
+        self.load_execSP_param(spInsert_dictionary[fileType.BWDollars], [self.reportID])
+        print('Dollars (0) Inserted')
+        self.val_Dollars_1.to_sql(name='STAGING', con=self.sqlalchemy_engine, if_exists='replace', index=False)
+        self.load_execSP_param(spInsert_dictionary[fileType.BWDollars], [self.reportID])
+        print('Dollars (1) Inserted')
+
+    def load_T110(self):
+        self.val_T110_Hours.to_sql(name='STAGING', con=self.sqlalchemy_engine, if_exists='replace', index=False)
+        self.load_execSP_param(spInsert_dictionary[fileType.T110_Hours], [self.reportID])
+        print('T110 Hours Inserted')
+        self.val_T110_Dollars.to_sql(name='STAGING', con=self.sqlalchemy_engine, if_exists='replace', index=False)
+        self.load_execSP_param(spInsert_dictionary[fileType.T110_Dollars], [self.reportID])
+        print('T110 Dollars Inserted')
+
+    def load_Hier(self):
+        self.val_Hier.to_sql(name='STAGING', con=self.sqlalchemy_engine, if_exists='replace', index=False)
+        self.load_execSP_param(spInsert_dictionary[fileType.Hierarchy], [self.reportID])
+        print('Hierarchy Inserted')
 
     def load_execSP_param_output(self, sql_str, parameters):
         connection = pyodbc.connect(self.connString)
@@ -273,11 +330,36 @@ class ETL:
         cursor.commit()
         return proxy
 
-    def load_insertIntoStaging(self, values):
-        values.to_sql(name='STAGING', con=self.sqlalchemy_engine, if_exists='replace', index=False)
-
     def load_execSP_param(self, sql_str, parameters):
         connection = pyodbc.connect(self.connString)
         cursor = connection.cursor()
         cursor.execute(sql_str, parameters)
         cursor.commit()
+
+class Parameters:
+
+    connString = ''
+    fileName_TYHours = ''
+    fileName_TYHours_1 = ''
+    fileName_LYHours = ''
+    fileName_LYHours_1 = ''
+    fileName_Dollars = ''
+    fileName_Dollars_1 = ''
+    fileName_T110 = ''
+    fileName_Hier = ''
+    fileName_Plant = ''
+
+    def __init__(self):
+        with open('DLM_FilePaths.json', 'r') as read_file:
+            paramData = json.load(read_file)
+
+        self.connString = paramData["ConnectionString"]
+        self.fileName_TYHours = paramData["fileName_TYHours"]
+        self.fileName_TYHours_1 = paramData["fileName_TYHours_1"]
+        self.fileName_LYHours = paramData["fileName_LYHours"]
+        self.fileName_LYHours_1 = paramData["fileName_LYHours_1"]
+        self.fileName_Dollars = paramData["fileName_Dollars"]
+        self.fileName_Dollars_1 = paramData["fileName_Dollars_1"]
+        self.fileName_T110 = paramData["fileName_T110"]
+        self.fileName_Hier = paramData["fileName_Hier"]
+        self.fileName_Plant = paramData["fileName_Plant"]
