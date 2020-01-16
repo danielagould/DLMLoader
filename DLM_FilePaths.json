@@ -1,0 +1,12 @@
+{
+  "ConnectionString" : "Driver={SQL Server Native Client 11.0};Server=CPC-5CG8253WS6\\SQLEXPRESS;Database=DLM;trusted_connection=yes",
+  "fileName_TYHours" : "Z1_ZHOUYAN_DLM_9502_Hours_Driver_TY.csv",
+  "fileName_TYHours_1" : "Z1_ZHOUYAN_DLM_9502_Hours_Driver_TY_1.csv",
+  "fileName_LYHours" : "Z1_ZHOUYAN_DLM_9502_Hours_Driver_LY.csv",
+  "fileName_LYHours_1" : "Z1_ZHOUYAN_DLM_9502_Hours_Driver_LY_1.csv",
+  "fileName_Dollars" : "Z1_ZHOUYAN_DLM_9000_Cost_Driver.csv",
+  "fileName_Dollars_1" : "Z1_ZHOUYAN_DLM_9000_Cost_Driver_1.csv",
+  "fileName_T110" : "Others\\T110 - YOY Adj.xlsb",
+  "fileName_Hier" : "Others\\R3HIER E.xls",
+  "fileName_Plant" : "Hours\\Major Plant CC.txt"
+}
