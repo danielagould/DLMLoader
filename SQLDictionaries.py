@@ -7,4 +7,8 @@ spInsert_dictionary: Dict[fileType, str] = {    fileType.T110_Hours: 'EXEC [dbo]
                                                 fileType.BWHours_Period: 'EXEC [dbo].[spBWHours_Period] ?',
                                                 fileType.BWHours_Weekly: 'EXEC [dbo].[spBWHours_Weekly] ?',
                                                 fileType.BWDollars: 'EXEC [dbo].[spBWDollars] ?',
-                                                fileType.Hierarchy: 'EXEC [dbo].[spHier] ?'}
+                                                fileType.Hierarchy: 'EXEC [dbo].[spHier_Insert] ?',
+                                                fileType.Plant: 'EXEC [dbo].[spPlant_Insert] ?'}
+
+spUpdate_dictionary: Dict[fileType, str] = {    fileType.Plant: 'EXEC [dbo].[spPlant_UseLatest] ?',
+                                                fileType.Hierarchy: 'EXEC [dbo].[spHier_UseLatest] ?'}

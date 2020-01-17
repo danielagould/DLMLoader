@@ -8,6 +8,7 @@ from FileDictionaries import delimiter_dictionary
 from FileDictionaries import T110sheetDictionary
 from FileDictionaries import XLsheetDictionary
 from SQLDictionaries import spInsert_dictionary
+from SQLDictionaries import spUpdate_dictionary
 from FileEnums import fileType
 import pandas as pd
 import sqlalchemy
@@ -273,9 +274,8 @@ class ETL:
         self.load_BWHours_Weekly()
         self.load_BWDollars()
         self.load_T110()
-        if self.getHier:
-            self.load_Hier()
-
+        self.load_Hier()
+        self.load_Plant()
 
     def load_connect(self):
         params = urllib.parse.quote_plus(self.connString)
@@ -318,9 +318,23 @@ class ETL:
         print('T110 Dollars Inserted')
 
     def load_Hier(self):
-        self.val_Hier.to_sql(name='STAGING', con=self.sqlalchemy_engine, if_exists='replace', index=False)
-        self.load_execSP_param(spInsert_dictionary[fileType.Hierarchy], [self.reportID])
-        print('Hierarchy Inserted')
+        if self.getHier:
+            self.val_Hier.to_sql(name='STAGING', con=self.sqlalchemy_engine, if_exists='replace', index=False)
+            self.load_execSP_param(spInsert_dictionary[fileType.Hierarchy], [self.reportID])
+            print('Hierarchy Inserted')
+        else:
+            self.load_execSP_param(spUpdate_dictionary[fileType.Hierarchy], [self.reportID])
+            print('Latest Hier Added to Report')
+
+    def load_Plant(self):
+        if self.getPlant:
+            self.val_Plant.to_sql(name='STAGING', con=self.sqlalchemy_engine, if_exists='replace', index=False)
+            self.load_execSP_param(spInsert_dictionary[fileType.Plant], [self.reportID])
+            print('Plant Inserted')
+        else:
+            self.load_execSP_param(spUpdate_dictionary[fileType.Plant], [self.reportID])
+            print('Latest Plant Added to Report')
+
 
     def load_execSP_param_output(self, sql_str, parameters):
         connection = pyodbc.connect(self.connString)
