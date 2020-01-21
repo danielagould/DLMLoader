@@ -377,3 +377,68 @@ class Parameters:
         self.fileName_T110 = paramData["fileName_T110"]
         self.fileName_Hier = paramData["fileName_Hier"]
         self.fileName_Plant = paramData["fileName_Plant"]
+
+class ResultLoader:
+
+    reportYear = 0
+    reportPeriod = 0
+
+    rootFolder = ''
+
+    fileName_T100 = 'T100 - Hours.xlsx'
+    fileName_T200 = 'T200 - Dollars.xlsx'
+    fileName_T400 = 't400 - yoy hours.xlsx'
+    fileName_T500 = 'T500 - YOY Dollars.xlsx'
+
+    val_T100 = pd.DataFrame
+    val_T200 = pd.DataFrame
+    val_T400 = pd.DataFrame
+    val_T500 = pd.DataFrame
+
+    sqlalchemy_engine = sqlalchemy.engine
+    connection = SQLconn
+    connString = ''
+
+    def __init__(self, reportYear, reportPeriod, rootFolder, connString):
+        self.reportYear = reportYear
+        self.reportPeriod = reportPeriod
+        self.rootFolder = rootFolder
+        self.connString = connString
+
+    def extract_all(self):
+        self.rootFolder = self.extract_addSlash(self.rootFolder)
+        self.val_T100 = self.extact_TX00(self.fileName_T100, fileType.T100)
+        print('T100 extracted')
+        # self.val_T200 = self.extact_TX00(self.fileName_T200, fileType.T200)
+        # print('T200 extracted')
+        # self.val_T400 = self.extact_TX00(self.fileName_T400, fileType.T400)
+        # print('T400 extracted')
+        # self.val_T500 = self.extact_TX00(self.fileName_T500, fileType.T500)
+        # print('T500 extracted')
+
+    def extact_TX00(self, fileName, fileType):
+        FileReader = I_xl.read(self.rootFolder + fileName)
+        FileReader.readData(XLsheetDictionary[fileType])
+        return FileReader.values
+
+    def load_all(self):
+        self.load_connect()
+        print('Connected to Database')
+        self.load_TX00(self.val_T100,'STAGING')
+        self.load_TX00(self.val_T200, 'T200 PRD')
+        self.load_TX00(self.val_T400, 'T400 PRD')
+        self.load_TX00(self.val_T500, 'T500 PRD')
+
+
+    def load_connect(self):
+        params = urllib.parse.quote_plus(self.connString)
+        self.sqlalchemy_engine = sqlalchemy.create_engine("mssql+pyodbc:///?odbc_connect=%s" % params)
+
+    def load_TX00(self, values, tableName):
+        values.to_sql(name=tableName, con=self.sqlalchemy_engine, if_exists='replace', index=False)
+
+    def extract_addSlash(self, locationString):
+        if locationString[-1:] == "\\":
+            return locationString
+        else:
+            return locationString + "\\"

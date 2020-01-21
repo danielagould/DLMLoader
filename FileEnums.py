@@ -10,6 +10,10 @@ class fileType(Enum):
     T110_Hours = 6
     T110_Dollars = 7
     Plant = 8
+    T100 = 9
+    T200 = 10
+    T400 = 11
+    T500 = 12
 
 class fileFormat(Enum):
     csv = 1
