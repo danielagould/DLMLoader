@@ -39,4 +39,5 @@ if runDLM:
 if runResultsLoader:
     vRL = ResultLoader(2019, 12, 'C:\\1.WorkWorkWork\\8. Data',vParam.connString)
     vRL.extract_all()
+    vRL.transform_all()
     vRL.load_all()

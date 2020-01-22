@@ -409,25 +409,43 @@ class ResultLoader:
         self.rootFolder = self.extract_addSlash(self.rootFolder)
         self.val_T100 = self.extact_TX00(self.fileName_T100, fileType.T100)
         print('T100 extracted')
-        # self.val_T200 = self.extact_TX00(self.fileName_T200, fileType.T200)
-        # print('T200 extracted')
-        # self.val_T400 = self.extact_TX00(self.fileName_T400, fileType.T400)
-        # print('T400 extracted')
-        # self.val_T500 = self.extact_TX00(self.fileName_T500, fileType.T500)
-        # print('T500 extracted')
+        self.val_T200 = self.extact_TX00(self.fileName_T200, fileType.T200)
+        print('T200 extracted')
+        self.val_T400 = self.extact_TX00(self.fileName_T400, fileType.T400)
+        print('T400 extracted')
+        self.val_T500 = self.extact_TX00(self.fileName_T500, fileType.T500)
+        print('T500 extracted')
 
     def extact_TX00(self, fileName, fileType):
         FileReader = I_xl.read(self.rootFolder + fileName)
         FileReader.readData(XLsheetDictionary[fileType])
         return FileReader.values
 
+    def transform_all(self):
+        self.transform_addcols(self.val_T100)
+        print('T100 transformed')
+        self.transform_addcols(self.val_T200)
+        print('T200 transformed')
+        self.transform_addcols(self.val_T400)
+        print('T400 transformed')
+        self.transform_addcols(self.val_T500)
+        print('T500 transformed')
+
+    def transform_addcols(self, values):
+        values.insert(0, 'ReportYear', self.reportYear)
+        values.insert(1, 'ReportPeriod', self.reportPeriod)
+
     def load_all(self):
         self.load_connect()
         print('Connected to Database')
-        self.load_TX00(self.val_T100,'STAGING')
-        self.load_TX00(self.val_T200, 'T200 PRD')
-        self.load_TX00(self.val_T400, 'T400 PRD')
-        self.load_TX00(self.val_T500, 'T500 PRD')
+        self.load_TX00(self.val_T100, 'T100 - PRD')
+        print('T100 inserted')
+        self.load_TX00(self.val_T200, 'T200 - PRD')
+        print('T200 inserted')
+        self.load_TX00(self.val_T400, 'T400 - PRD')
+        print('T400 inserted')
+        self.load_TX00(self.val_T500, 'T500 - PRD')
+        print('T500 inserted')
 
 
     def load_connect(self):
